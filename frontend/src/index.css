@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+}
+
+/* FullCalendar Customizations */
+.fc {
+  --fc-border-color: #e2e8f0;
+  --fc-today-bg-color: #eff6ff;
+  --fc-button-bg-color: #3b82f6;
+  --fc-button-border-color: #2563eb;
+  --fc-button-hover-bg-color: #1d4ed8;
+  --fc-button-hover-border-color: #1e40af;
+  --fc-button-active-bg-color: #1e3a8a;
+  --fc-event-resizer-thickness: 8px;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #1e293b;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+  border-color: #e2e8f0 !important;
+}
+
+.fc-daygrid-event {
+  border-radius: 6px !important;
+  padding: 2px 6px !important;
+  font-size: 0.8rem !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.fc-daygrid-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.fc-event-dday {
+  background-color: #dc2626 !important;
+  border-color: #b91c1c !important;
+}
+
+.fc-event-urgent {
+  background-color: #ef4444 !important;
+  border-color: #dc2626 !important;
+}
+
+.fc-event-caution {
+  background-color: #f59e0b !important;
+  border-color: #d97706 !important;
+}
+
+.fc-event-normal {
+  background-color: #3b82f6 !important;
+  border-color: #2563eb !important;
+}
+
+.fc-event-expired {
+  background-color: #94a3b8 !important;
+  border-color: #64748b !important;
+  opacity: 0.75;
+}

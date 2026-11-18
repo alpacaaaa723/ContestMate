@@ -1,0 +1,1 @@
+"""ContestMate Backend Application Package"""
