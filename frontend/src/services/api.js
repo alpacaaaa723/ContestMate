@@ -76,25 +76,61 @@ export const contestApi = {
     } catch (e) {
       console.warn('[ContestMate] Backend API unavailable, using fallback data:', e.message);
     }
-    // Fallback
+    // Fallback: 백엔드 미연결 시 로컬 실제 데이터 기반 정밀 필터링, 정렬, 페이지네이션
     let items = getLocalContests();
+    
+    // 카테고리 필터
     if (params.category && params.category !== '전체') {
       items = items.filter(c => c.category === params.category);
     }
-    if (params.keyword) {
-      const kw = params.keyword.toLowerCase();
-      items = items.filter(c => c.title.toLowerCase().includes(kw) || c.organizer.toLowerCase().includes(kw));
+    
+    // 검색어 필터 (search 또는 keyword)
+    const searchKw = (params.search || params.keyword || '').toLowerCase().trim();
+    if (searchKw) {
+      items = items.filter(c => 
+        (c.title || '').toLowerCase().includes(searchKw) || 
+        (c.organizer || '').toLowerCase().includes(searchKw) ||
+        (c.description || '').toLowerCase().includes(searchKw)
+      );
     }
+
+    // 정렬 (마감 임박순, 최신 등록순, 관심도순)
+    const sortBy = params.sort_by || 'deadline';
+    if (sortBy === 'deadline') {
+      items.sort((a, b) => {
+        const da = a.dday >= 0 ? a.dday : 9999;
+        const db = b.dday >= 0 ? b.dday : 9999;
+        return da - db;
+      });
+    } else if (sortBy === 'latest') {
+      items.sort((a, b) => new Date(b.start_date || 0) - new Date(a.start_date || 0));
+    } else if (sortBy === 'interest') {
+      const prefs = getLocalPreferences();
+      items.sort((a, b) => {
+        const aMatch = prefs.categories.some(cat => a.category?.includes(cat)) ? 1 : 0;
+        const bMatch = prefs.categories.some(cat => b.category?.includes(cat)) ? 1 : 0;
+        return bMatch - aMatch;
+      });
+    }
+
     const bookmarks = getLocalBookmarks();
     const enriched = items.map(c => ({
       ...c,
       is_bookmarked: bookmarks.includes(c.id)
     }));
+
+    // 페이지네이션 슬라이스
+    const page = Math.max(1, Number(params.page) || 1);
+    const pageSize = Math.max(1, Number(params.page_size) || 12);
+    const total = enriched.length;
+    const startIdx = (page - 1) * pageSize;
+    const pagedItems = enriched.slice(startIdx, startIdx + pageSize);
+
     return {
-      total: enriched.length,
-      items: enriched,
-      page: 1,
-      page_size: enriched.length
+      total: total,
+      items: pagedItems,
+      page: page,
+      page_size: pageSize
     };
   },
 

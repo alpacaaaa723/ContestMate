@@ -66,6 +66,29 @@ const ContestListPage = () => {
     fetchContests();
   };
 
+  const totalPages = Math.max(1, Math.ceil(total / 12));
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+      setPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // 슬라이딩 페이지 번호 계산 (최대 5개 노출)
+  const getPageNumbers = () => {
+    const pages = [];
+    let start = Math.max(1, page - 2);
+    let end = Math.min(totalPages, start + 4);
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+    }
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   const handleCategoryClick = (cat) => {
     setSelectedCategory(cat);
     setPage(1);
@@ -150,24 +173,40 @@ const ContestListPage = () => {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-center gap-2 pt-6">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-8 pb-4">
             <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page <= 1}
+              className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition"
             >
               이전
             </button>
-            <span className="text-xs font-bold text-slate-700 px-3">
-              {page} / {Math.max(1, Math.ceil(total / 12))}
-            </span>
+
+            {getPageNumbers().map((num) => (
+              <button
+                key={num}
+                onClick={() => handlePageChange(num)}
+                className={`w-9 h-9 rounded-xl text-xs font-bold transition shadow-sm ${
+                  num === page
+                    ? 'bg-blue-600 text-white shadow-blue-500/20'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {num}
+              </button>
+            ))}
+
             <button
-              onClick={() => setPage(p => p + 1)}
-              disabled={page >= Math.ceil(total / 12)}
-              className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= totalPages}
+              className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition"
             >
               다음
             </button>
+
+            <span className="text-[11px] font-medium text-slate-400 ml-2 hidden sm:inline">
+              (총 {totalPages}페이지 / {total}개)
+            </span>
           </div>
         </>
       ) : (
