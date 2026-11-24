@@ -1,9 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ExternalLink, Bookmark, Building, Calendar, Award, Users, Tag } from 'lucide-react';
 import DDayBadge from './DDayBadge';
+import { bookmarkApi } from '../../services/api';
 
 const ContestDetailModal = ({ contest, isOpen, onClose, onBookmarkChanged }) => {
+  const [isBookmarked, setIsBookmarked] = useState(Boolean(contest?.is_bookmarked));
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
+  useEffect(() => {
+    setIsBookmarked(Boolean(contest?.is_bookmarked));
+  }, [contest?.is_bookmarked, contest?.id]);
+
   if (!isOpen || !contest) return null;
+
+  const handleToggleBookmark = async () => {
+    if (bookmarkLoading || !contest?.id) return;
+    try {
+      setBookmarkLoading(true);
+      if (isBookmarked) {
+        await bookmarkApi.removeBookmark(contest.id);
+        setIsBookmarked(false);
+        if (onBookmarkChanged) onBookmarkChanged(contest.id, false);
+      } else {
+        await bookmarkApi.addBookmark(contest.id);
+        setIsBookmarked(true);
+        if (onBookmarkChanged) onBookmarkChanged(contest.id, true);
+      }
+    } catch (e) {
+      alert('북마크 변경 실패: ' + e.message);
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
@@ -107,22 +135,37 @@ const ContestDetailModal = ({ contest, isOpen, onClose, onBookmarkChanged }) => 
         </div>
 
         {/* Modal Footer */}
-        <div className="p-6 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/50">
+        <div className="p-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
           <button
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+            onClick={handleToggleBookmark}
+            disabled={bookmarkLoading}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition shadow-sm ${
+              isBookmarked
+                ? 'bg-amber-50 border-amber-300 text-amber-700 shadow-amber-500/10'
+                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+            }`}
           >
-            닫기
+            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
+            <span>{isBookmarked ? '북마크 저장됨' : '북마크 추가'}</span>
           </button>
-          <a
-            href={contest.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition shadow-md shadow-blue-500/20"
-          >
-            <span>원본 공고 사이트 방문</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100"
+            >
+              닫기
+            </button>
+            <a
+              href={contest.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-bold hover:bg-blue-700 transition shadow-md shadow-blue-500/20"
+            >
+              <span>원본 공고 이동</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
       </div>
     </div>

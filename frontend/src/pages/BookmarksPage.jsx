@@ -56,11 +56,11 @@ const BookmarksPage = () => {
       ) : bookmarks.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {bookmarks.map((bm) => {
-            const contest = bm.contest || { id: bm.contest_id, title: '공모전 정보 로딩...' };
+            const contest = (bm.contest && bm.contest.title) ? bm.contest : bm;
             return (
               <ContestCard
-                key={bm.id}
-                contest={contest}
+                key={contest.id || bm.id || bm.contest_id}
+                contest={{ ...contest, is_bookmarked: true }}
                 onSelect={setSelectedContest}
                 onBookmarkChanged={fetchBookmarks}
               />

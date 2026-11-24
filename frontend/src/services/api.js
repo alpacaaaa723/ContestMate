@@ -20,14 +20,22 @@ const getLocalContests = () => {
 
 const getLocalBookmarks = () => {
   try {
-    return JSON.parse(localStorage.getItem('contestmate_bookmarks') || '[]');
+    const raw = localStorage.getItem('contestmate_bookmarks');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
   } catch {
     return [];
   }
 };
 
 const saveLocalBookmarks = (bookmarks) => {
-  localStorage.setItem('contestmate_bookmarks', JSON.stringify(bookmarks));
+  try {
+    const unique = Array.from(new Set(bookmarks.map(String)));
+    localStorage.setItem('contestmate_bookmarks', JSON.stringify(unique));
+  } catch (e) {
+    console.error('Failed to save bookmarks to localStorage:', e);
+  }
 };
 
 const getLocalPreferences = () => {
@@ -70,9 +78,18 @@ const isValidJsonResponse = (res) => {
 
 export const contestApi = {
   getContests: async (params = {}) => {
+    const bookmarks = getLocalBookmarks();
     try {
       const res = await api.get('/contests', { params });
-      if (isValidJsonResponse(res)) return res.data;
+      if (isValidJsonResponse(res)) {
+        if (Array.isArray(res.data?.items)) {
+          res.data.items = res.data.items.map(c => ({
+            ...c,
+            is_bookmarked: bookmarks.includes(String(c.id))
+          }));
+        }
+        return res.data;
+      }
     } catch (e) {
       console.warn('[ContestMate] Backend API unavailable, using fallback data:', e.message);
     }
@@ -113,10 +130,9 @@ export const contestApi = {
       });
     }
 
-    const bookmarks = getLocalBookmarks();
     const enriched = items.map(c => ({
       ...c,
-      is_bookmarked: bookmarks.includes(c.id)
+      is_bookmarked: bookmarks.includes(String(c.id))
     }));
 
     // 페이지네이션 슬라이스
@@ -135,14 +151,19 @@ export const contestApi = {
   },
 
   getRecommended: async (limit = 6) => {
+    const bookmarks = getLocalBookmarks();
     try {
       const res = await api.get('/contests/recommended', { params: { limit } });
-      if (isValidJsonResponse(res) && Array.isArray(res.data)) return res.data;
+      if (isValidJsonResponse(res) && Array.isArray(res.data)) {
+        return res.data.map(c => ({
+          ...c,
+          is_bookmarked: bookmarks.includes(String(c.id))
+        }));
+      }
     } catch (e) {
       console.warn('[ContestMate] Backend API unavailable, using fallback recommended:', e.message);
     }
     const prefs = getLocalPreferences();
-    const bookmarks = getLocalBookmarks();
     let items = getLocalContests();
     
     // 관심 카테고리 매칭
@@ -155,36 +176,76 @@ export const contestApi = {
     const pool = matched.length > 0 ? matched : items;
     return pool.slice(0, limit).map(c => ({
       ...c,
-      is_bookmarked: bookmarks.includes(c.id)
+      is_bookmarked: bookmarks.includes(String(c.id))
     }));
   },
 
   getContestDetail: async (id) => {
+    const bookmarks = getLocalBookmarks();
     try {
       const res = await api.get(`/contests/${id}`);
-      if (isValidJsonResponse(res)) return res.data;
+      if (isValidJsonResponse(res)) {
+        return {
+          ...res.data,
+          is_bookmarked: bookmarks.includes(String(res.data.id))
+        };
+      }
     } catch {}
     const items = getLocalContests();
-    const bookmarks = getLocalBookmarks();
-    const found = items.find(c => c.id === id) || items[0];
+    const found = items.find(c => String(c.id) === String(id)) || items[0];
     return {
       ...found,
-      is_bookmarked: bookmarks.includes(found?.id)
+      is_bookmarked: bookmarks.includes(String(found?.id))
     };
   },
 };
 
 export const calendarApi = {
   getEvents: async (params = {}) => {
+    const bookmarks = getLocalBookmarks();
     try {
       const res = await api.get('/calendar/events', { params });
-      if (isValidJsonResponse(res) && Array.isArray(res.data)) return res.data;
+      if (isValidJsonResponse(res) && Array.isArray(res.data)) {
+        return res.data
+          .filter(ev => {
+            if (params.bookmark_only) {
+              const cid = String(ev.extendedProps?.contest_id || ev.id);
+              return bookmarks.includes(cid);
+            }
+            return true;
+          })
+          .map(ev => {
+            const cid = String(ev.extendedProps?.contest_id || ev.id);
+            const isBm = bookmarks.includes(cid);
+            return {
+              ...ev,
+              extendedProps: {
+                ...ev.extendedProps,
+                is_bookmarked: isBm
+              }
+            };
+          });
+      }
     } catch {}
-    const items = getLocalContests();
-    const bookmarks = getLocalBookmarks();
+
+    let items = getLocalContests();
+
+    // Filter by bookmark_only
+    if (params.bookmark_only) {
+      items = items.filter(c => bookmarks.includes(String(c.id)));
+    }
+    // Filter by deadline_within
+    if (params.deadline_within !== undefined) {
+      const limit = Number(params.deadline_within);
+      items = items.filter(c => c.dday >= 0 && c.dday <= limit);
+    }
+    // Filter by category
+    if (params.category && params.category !== '전체 분야' && params.category !== '전체') {
+      items = items.filter(c => c.category === params.category);
+    }
 
     return items.map(c => {
-      const isBookmarked = bookmarks.includes(c.id);
+      const isBookmarked = bookmarks.includes(String(c.id));
       let color = '#3b82f6';
       if (c.dday <= 1) color = '#ef4444';
       else if (c.dday <= 3) color = '#f97316';
@@ -214,36 +275,63 @@ export const calendarApi = {
 
 export const bookmarkApi = {
   getBookmarks: async () => {
+    const localBookmarks = getLocalBookmarks();
     try {
       const res = await api.get('/bookmarks');
-      if (isValidJsonResponse(res) && Array.isArray(res.data)) return res.data;
-    } catch {}
-    const bookmarks = getLocalBookmarks();
-    const items = getLocalContests();
-    return items.filter(c => bookmarks.includes(c.id)).map(c => ({
-      ...c,
-      is_bookmarked: true
-    }));
+      if (isValidJsonResponse(res) && Array.isArray(res.data)) {
+        // Backend items normalization: could be { id, contest } or contest object
+        const serverBookmarks = res.data.map(item => {
+          if (item && item.contest && item.contest.title) {
+            return { ...item.contest, is_bookmarked: true };
+          }
+          return { ...item, is_bookmarked: true };
+        });
+
+        // Merge any local bookmarked IDs that server might not have yet
+        const serverIds = new Set(serverBookmarks.map(c => String(c.id)));
+        const allLocal = getLocalContests();
+        const extraFromLocal = allLocal
+          .filter(c => localBookmarks.includes(String(c.id)) && !serverIds.has(String(c.id)))
+          .map(c => ({ ...c, is_bookmarked: true }));
+
+        const merged = [...serverBookmarks, ...extraFromLocal];
+        saveLocalBookmarks(merged.map(c => String(c.id)));
+        return merged;
+      }
+    } catch (e) {
+      console.warn('[ContestMate] Backend bookmark API unavailable, using local bookmarks:', e.message);
+    }
+
+    // Local / Offline / Vercel fallback:
+    const allItems = getLocalContests();
+    return allItems
+      .filter(c => localBookmarks.includes(String(c.id)))
+      .map(c => ({
+        ...c,
+        is_bookmarked: true
+      }));
   },
 
   addBookmark: async (contestId) => {
+    const cId = String(contestId);
+    const bookmarks = getLocalBookmarks();
+    if (!bookmarks.includes(cId)) {
+      bookmarks.push(cId);
+      saveLocalBookmarks(bookmarks);
+    }
     try {
       await api.post(`/bookmarks/${contestId}`);
     } catch {}
-    const bookmarks = getLocalBookmarks();
-    if (!bookmarks.includes(contestId)) {
-      bookmarks.push(contestId);
-      saveLocalBookmarks(bookmarks);
-    }
     return { status: 'success', is_bookmarked: true };
   },
 
   removeBookmark: async (contestId) => {
+    const cId = String(contestId);
+    const bookmarks = getLocalBookmarks().filter(id => id !== cId);
+    saveLocalBookmarks(bookmarks);
     try {
       await api.delete(`/bookmarks/${contestId}`);
     } catch {}
-    const bookmarks = getLocalBookmarks().filter(id => id !== contestId);
-    saveLocalBookmarks(bookmarks);
     return { status: 'success', is_bookmarked: false };
   },
 };

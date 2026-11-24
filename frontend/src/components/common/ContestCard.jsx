@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bookmark, ExternalLink, Calendar, Building, Sparkles } from 'lucide-react';
 import DDayBadge from './DDayBadge';
 import { bookmarkApi } from '../../services/api';
@@ -13,8 +13,12 @@ const getSourceColor = (source) => {
 };
 
 const ContestCard = ({ contest, onSelect, onBookmarkChanged }) => {
-  const [isBookmarked, setIsBookmarked] = useState(contest.is_bookmarked);
+  const [isBookmarked, setIsBookmarked] = useState(Boolean(contest.is_bookmarked));
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setIsBookmarked(Boolean(contest.is_bookmarked));
+  }, [contest.is_bookmarked, contest.id]);
 
   const toggleBookmark = async (e) => {
     e.stopPropagation();
