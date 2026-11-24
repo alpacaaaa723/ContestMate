@@ -18,7 +18,8 @@ class BaseCollector(ABC):
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
             },
             timeout=15.0,
-            follow_redirects=True
+            follow_redirects=True,
+            verify=False
         )
 
     async def check_robots_allowed(self, target_url: str) -> bool:

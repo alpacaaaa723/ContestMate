@@ -72,7 +72,7 @@ const DashboardPage = () => {
             오늘도 새로운 기회에 도전해보세요!
           </h1>
           <p className="text-blue-100 text-sm mt-2 max-w-xl">
-            위비티, 씽굿, 링커리어의 최신 공모전을 분석하여 회원님의 관심 분야와 참가 조건에 맞는 공모전만 골라 추천해드립니다.
+            위비티, 링커리어, 캠퍼스픽, 올콘, 콘테스트코리아, 데브이벤트 등 국내 주요 공모전 포털의 500여 개 대회를 종합 분석하여 회원님의 관심 분야와 참가 조건에 맞는 공모전만 골라 추천해드립니다.
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">

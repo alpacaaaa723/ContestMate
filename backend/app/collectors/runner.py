@@ -5,6 +5,9 @@ from app.collectors.wevity import WevityCollector
 from app.collectors.thinkgood import ThinkgoodCollector
 from app.collectors.linkareer import LinkareerCollector
 from app.collectors.contestkorea import ContestkoreaCollector
+from app.collectors.allcon import AllconCollector
+from app.collectors.campuspick import CampuspickCollector
+from app.collectors.devevent import DevEventCollector
 from app.core.database import get_supabase_client, local_db
 
 # 초기 부트스트랩 데이터 (실제 공개 공모전 형태의 고품질 기본 데이터)
@@ -96,9 +99,12 @@ class CollectorRunner:
     def __init__(self):
         self.collectors = [
             WevityCollector(),
-            ThinkgoodCollector(),
             LinkareerCollector(),
+            CampuspickCollector(),
+            AllconCollector(),
+            DevEventCollector(),
             ContestkoreaCollector(),
+            ThinkgoodCollector(),
         ]
 
     def _save_contests(self, items: List[Dict[str, Any]]) -> int:

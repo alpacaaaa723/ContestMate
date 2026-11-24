@@ -1,6 +1,6 @@
 # 🏆 ContestMate - 개인 맞춤형 공모전 통합 알림 서비스
 
-> 국내 공모전 및 대외활동 사이트(위비티, 씽굿, 링커리어)의 실시간 데이터를 수집하고, 사용자 맞춤 추천, D-day 마감일 캘린더 관리, Telegram 마감 알림을 제공하는 실시간 웹 서비스입니다.
+> 국내 주요 공모전 및 대외활동 포털(위비티, 링커리어, 캠퍼스픽, 올콘, 데브이벤트, 콘테스트코리아, 씽굿 등)의 실시간 데이터를 수집하여 500여 개 이상의 실제 공모전을 사용자 맞춤 추천, D-day 마감일 캘린더 관리, Telegram 마감 알림으로 제공하는 실시간 웹 & PWA 서비스입니다.
 
 ---
 
@@ -9,7 +9,7 @@
 - **Frontend**: React 18 + Vite + Tailwind CSS + FullCalendar React + PWA (앱 설치 지원)
 - **Backend**: Python 3.10+ + FastAPI + Pydantic v2 + APScheduler
 - **Database & Auth**: Supabase PostgreSQL + Supabase Auth (RLS 적용)
-- **Scraping**: BeautifulSoup4, httpx, Playwright 호환 구조 (위비티, 씽굿, 링커리어 독립 수집기)
+- **Scraping**: BeautifulSoup4, httpx, REST/AJAX API, Markdown parser (위비티, 링커리어, 캠퍼스픽, 올콘, 데브이벤트, 콘테스트코리아, 씽굿 7대 독립 수집기)
 - **Notification**: Telegram Bot API
 - **Deployment**: Vercel (Frontend) + Render / Railway (Backend) + Docker
 
