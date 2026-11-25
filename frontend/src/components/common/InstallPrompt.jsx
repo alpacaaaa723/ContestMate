@@ -89,7 +89,7 @@ export default function InstallPrompt() {
   return (
     <>
       {/* 하단 고정 플로팅 앱 설치 배너 */}
-      <aside aria-label="앱 설치 안내" className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 z-50 animate-bounce-once">
+      <aside aria-label="앱 설치 안내" className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 z-40 animate-bounce-once">
         <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-indigo-500/30 backdrop-blur-lg flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 p-0.5 shadow-md flex-shrink-0 flex items-center justify-center">

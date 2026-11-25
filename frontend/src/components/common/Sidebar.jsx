@@ -9,7 +9,7 @@ import {
   Sliders, 
   Trophy,
   Download,
-  Smartphone
+  X
 } from 'lucide-react';
 
 const navItems = [
@@ -21,7 +21,7 @@ const navItems = [
   { path: '/preferences', label: '맞춤 설정', icon: Sliders },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ isMobile = false, onClose }) => {
   const [installed, setInstalled] = useState(false);
 
   const handleInstallApp = async () => {
@@ -37,18 +37,41 @@ const Sidebar = () => {
     }
   };
 
+  const handleLinkClick = () => {
+    if (isMobile && onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex shrink-0">
+    <aside 
+      className={`${
+        isMobile 
+          ? 'w-full h-full bg-white flex flex-col justify-between overflow-y-auto' 
+          : 'w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex shrink-0'
+      }`}
+    >
       <div>
         {/* Brand Header */}
-        <div className="h-16 flex items-center px-6 border-b border-slate-100 gap-3">
-          <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-            <Trophy className="w-5 h-5" />
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
+              <Trophy className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="font-extrabold text-lg tracking-tight text-slate-900">ContestMate</h1>
+              <p className="text-[11px] text-slate-400 font-medium -mt-1">맞춤 공모전 캘린더</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-extrabold text-lg tracking-tight text-slate-900">ContestMate</h1>
-            <p className="text-[11px] text-slate-400 font-medium -mt-1">맞춤 공모전 캘린더</p>
-          </div>
+          {isMobile && onClose && (
+            <button
+              onClick={onClose}
+              aria-label="메뉴 닫기"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation Links */}
@@ -59,11 +82,12 @@ const Sidebar = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={handleLinkClick}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                     isActive
                       ? 'bg-indigo-50 text-indigo-600 font-bold shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 active:bg-slate-100'
                   }`
                 }
               >
@@ -92,8 +116,8 @@ const Sidebar = () => {
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             수집 엔진 정상 동작 중
           </div>
-          <p className="text-[11px] text-slate-500">
-            위비티, 링커리어, 캠퍼스픽, 올콘, 데브이벤트, 콘테스트코리아 등 500+ 실시간
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            위비티, 링커리어, 캠퍼스픽, 올콘, 데브이벤트, 콘테스트코리아 등 470+ 실시간
           </p>
         </div>
       </div>
